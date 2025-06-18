@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mental Math Assessment for Year 3 Students">
+    <title>Mental Math Assessment - Year 3</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Animated Background Elements -->
+    <div class="background-animations">
+        <div class="floating-math-symbols">
+            <span class="math-symbol symbol-1">✕</span>
+            <span class="math-symbol symbol-2">÷</span>
+            <span class="math-symbol symbol-3">+</span>
+            <span class="math-symbol symbol-4">−</span>
+            <span class="math-symbol symbol-5">=</span>
+            <span class="math-symbol symbol-6">✕</span>
+            <span class="math-symbol symbol-7">+</span>
+            <span class="math-symbol symbol-8">÷</span>
+        </div>
+        <div class="floating-shapes">
+            <div class="shape circle-1"></div>
+            <div class="shape triangle-1"></div>
+            <div class="shape star-1">⭐</div>
+            <div class="shape circle-2"></div>
+            <div class="shape triangle-2"></div>
+            <div class="shape star-2">✨</div>
+            <div class="shape circle-3"></div>
+            <div class="shape star-3">🌟</div>
+        </div>
+        <div class="sparkle-effects">
+            <div class="sparkle sparkle-1">✨</div>
+            <div class="sparkle sparkle-2">⭐</div>
+            <div class="sparkle sparkle-3">✨</div>
+            <div class="sparkle sparkle-4">🌟</div>
+            <div class="sparkle sparkle-5">✨</div>
+            <div class="sparkle sparkle-6">⭐</div>
+        </div>
+        <div class="floating-numbers">
+            <span class="number-decoration num-1">3</span>
+            <span class="number-decoration num-2">9</span>
+            <span class="number-decoration num-3">5</span>
+            <span class="number-decoration num-4">7</span>
+            <span class="number-decoration num-5">2</span>
+            <span class="number-decoration num-6">8</span>
+            <span class="number-decoration num-7">4</span>
+            <span class="number-decoration num-8">6</span>
+        </div>
+    </div>
+
+    <!-- Main Menu Page -->
+    <div id="main-menu" class="page active">
+        <header class="adventure-header">
+            <div class="header-decoration">
+                <span class="header-star">🌟</span>
+                <div class="calculator-icon">🧮</div>
+                <span class="header-star">🌟</span>
+            </div>
+            <h1 class="adventure-title">Mental Math Assessment</h1>
+            <p class="subtitle-text">Year 3 Students</p>
+        </header>
+
+        <div class="container">
+            <!-- Student Name Input Section -->
+            <section class="name-input-section adventure-card">
+                <div class="card-mascot">
+                    <span class="mascot-icon">🦸‍♂️</span>
+                    <span class="mascot-book">📚</span>
+                    <span class="mascot-sparkle">✨</span>
+                </div>
+                
+                <div class="welcome-content">
+                    <h2 class="welcome-title">Ready to show your math skills?</h2>
+                    <p class="instructions adventure-instructions">
+                        What's your name?
+                    </p>
+                </div>
+
+                <form id="name-form" class="adventure-form">
+                    <div class="input-container">
+                        <div class="input-icon">👤</div>
+                        <input type="text" id="student-name" placeholder="Enter your name" required>
+                        <div class="input-glow"></div>
+                    </div>
+                    <button type="submit" class="btn btn-adventure">
+                        <span class="btn-text">Let's Go!</span>
+                        <span class="btn-icon">🚀</span>
+                    </button>
+                </form>
+
+
+            </section>
+
+            <!-- Assessment Selection (Hidden until name and avatar are selected) -->
+            <section id="assessment-selection" class="assessment-selection hidden">
+                <div class="assessment-header-info">
+                    <div class="student-info-large">
+                        <div id="menu-student-avatar" class="student-avatar-large"></div>
+                        <div class="student-details">
+                            <span id="menu-student-name" class="student-name"></span>
+                            <span id="menu-champion-name" class="champion-name"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h2>🎯 Choose Your Assessment</h2>
+                <p class="instructions">Click on an assessment to begin. Listen carefully to each question!</p>
+                
+                <div class="assessment-grid">
+                    <button class="assessment-btn" data-assessment="1">
+                        <span class="assessment-number">1</span>
+                        <span class="assessment-title">Mental Maths Assessment 1</span>
+                    </button>
+                    <button class="assessment-btn" data-assessment="2">
+                        <span class="assessment-number">2</span>
+                        <span class="assessment-title">Mental Maths Assessment 2</span>
+                    </button>
+                    <button class="assessment-btn" data-assessment="3">
+                        <span class="assessment-number">3</span>
+                        <span class="assessment-title">Mental Maths Assessment 3</span>
+                    </button>
+                    <button class="assessment-btn" data-assessment="4">
+                        <span class="assessment-number">4</span>
+                        <span class="assessment-title">Mental Maths Assessment 4</span>
+                    </button>
+                    <button class="assessment-btn" data-assessment="5">
+                        <span class="assessment-number">5</span>
+                        <span class="assessment-title">Mental Maths Assessment 5</span>
+                    </button>
+                    <button class="assessment-btn" data-assessment="6">
+                        <span class="assessment-number">6</span>
+                        <span class="assessment-title">Mental Maths Assessment 6</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Avatar Selection Page -->
+    <div id="avatar-selection-page" class="page">
+        <header>
+            <h1>🏆 Choose Your Math Champion!</h1>
+            <p class="subtitle">Pick your inspiration</p>
+        </header>
+
+        <div class="container">
+            <section class="avatar-selection-section">
+                <p class="instructions">Pick your favorite star to join you on this math adventure!</p>
+                
+                <div id="avatar-grid" class="avatar-grid">
+                    <!-- Avatar options will be added here -->
+                </div>
+                
+                <div class="avatar-continue">
+                    <button id="avatar-continue-btn" class="btn btn-primary" disabled>Continue</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Assessment Page -->
+    <div id="assessment-page" class="page">
+        <header>
+            <div class="header-info">
+                <span id="current-assessment">Assessment 1</span>
+                <div class="student-info-header">
+                    <div id="student-avatar-small" class="student-avatar-small"></div>
+                    <div class="student-details-small">
+                        <span id="student-display-small" class="student-name-small"></span>
+                        <span id="champion-display-small" class="champion-name-small"></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Question Display -->
+            <section class="question-section">
+                <div class="question-header">
+                    <span id="question-counter">Question 1 of 12</span>
+                    <div id="timer-display" class="timer">
+                        <div id="timer-circle">
+                            <span id="timer-number">5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="question-text" class="question-text">
+                    Listen to the question...
+                </div>
+
+                <div class="answer-input">
+                    <input type="text" id="answer-input" placeholder="Your answer" inputmode="numeric">
+                </div>
+
+                <div id="listening-indicator" class="listening-indicator">
+                    🔊 Listen carefully...
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Transition Screen (Before 10-second questions) -->
+    <div id="transition-screen" class="page">
+        <div class="container text-center">
+            <div class="transition-avatar-section">
+                <div id="transition-avatar" class="student-avatar-large"></div>
+                <p class="transition-encouragement">
+                    <span id="transition-student-name"></span>, you're doing great with <span id="transition-champion-name"></span> cheering you on!
+                </p>
+            </div>
+            
+            <h2>⏰ Get Ready!</h2>
+            <p class="large-text">The next questions will give you <strong>10 seconds</strong> to answer.</p>
+            <p class="instructions">Take your time and think carefully!</p>
+            <button id="begin-10s-btn" class="btn btn-primary">Begin</button>
+        </div>
+    </div>
+
+    <!-- Results Page -->
+    <div id="results-page" class="page">
+        <header>
+            <h1>🎉 Assessment Complete!</h1>
+        </header>
+
+        <div class="container">
+            <div id="results-content">
+                <!-- Results will be populated here -->
+            </div>
+            <button id="return-menu-btn" class="btn btn-primary">Take Another Assessment</button>
+        </div>
+    </div>
+
+    <!-- TTS Support Check -->
+    <div id="tts-error" class="error-message hidden">
+        <p>⚠️ Text-to-speech is not supported in your browser. Please use Chrome, Safari, or Firefox for the best experience.</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

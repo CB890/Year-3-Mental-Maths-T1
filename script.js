@@ -111,6 +111,7 @@ const assessments = {
 let currentAssessment = null;
 let currentQuestion = 0;
 let studentName = '';
+let studentClass = '';
 let selectedAvatar = '';
 let selectedAvatarName = '';
 let selectedAvatarImageUrl = '';
@@ -171,6 +172,7 @@ const pages = {
 const elements = {
   nameForm: document.getElementById('name-form'),
   studentNameInput: document.getElementById('student-name'),
+  studentClassInput: document.getElementById('student-class'),
   assessmentSelection: document.getElementById('assessment-selection'),
   
   // Avatar selection elements
@@ -423,6 +425,62 @@ function setupEventListeners() {
       console.log('No valid avatar option found');
     }
   });
+
+  // Keyboard navigation for avatar selection
+  document.addEventListener('keydown', (e) => {
+    // Only handle keyboard navigation when on avatar selection page
+    if (!pages.avatarSelection || pages.avatarSelection.style.display === 'none') {
+      return;
+    }
+
+    const avatarOptions = Array.from(elements.avatarGrid.querySelectorAll('.avatar-option'));
+    if (avatarOptions.length === 0) return;
+
+    let currentFocusIndex = avatarOptions.findIndex(option => option === document.activeElement);
+    
+    // If no avatar is focused, focus the first one or the selected one
+    if (currentFocusIndex === -1) {
+      const selectedAvatar = avatarOptions.find(option => option.classList.contains('selected'));
+      currentFocusIndex = selectedAvatar ? avatarOptions.indexOf(selectedAvatar) : 0;
+    }
+
+    switch(e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        e.preventDefault();
+        currentFocusIndex = (currentFocusIndex + 1) % avatarOptions.length;
+        avatarOptions[currentFocusIndex].focus();
+        break;
+      
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        e.preventDefault();
+        currentFocusIndex = (currentFocusIndex - 1 + avatarOptions.length) % avatarOptions.length;
+        avatarOptions[currentFocusIndex].focus();
+        break;
+      
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        if (currentFocusIndex >= 0 && avatarOptions[currentFocusIndex]) {
+          selectAvatar(avatarOptions[currentFocusIndex]);
+        }
+        break;
+    }
+  });
+
+  // Make avatar options focusable
+  const makeAvatarsFocusable = () => {
+    const avatarOptions = elements.avatarGrid.querySelectorAll('.avatar-option');
+    avatarOptions.forEach((option, index) => {
+      option.setAttribute('tabindex', index === 0 ? '0' : '-1');
+      option.setAttribute('role', 'button');
+      option.setAttribute('aria-label', `Select ${option.dataset.name || 'avatar'}`);
+    });
+  };
+
+  // Initialize focusable avatars when page loads
+  setTimeout(makeAvatarsFocusable, 100);
   
   // Avatar continue button
   elements.avatarContinueBtn.addEventListener('click', () => {
@@ -557,18 +615,28 @@ function handleNameSubmission(e) {
   console.log('=== NAME SUBMISSION STARTED ===');
   e.preventDefault();
   const name = elements.studentNameInput.value.trim();
+  const studentClassValue = elements.studentClassInput.value.trim();
   console.log('Name entered:', name);
+  console.log('Class entered:', studentClassValue);
   
   if (name.length < 1) {
     alert('Please enter your name');
     return;
   }
   
+  if (studentClassValue.length < 1) {
+    alert('Please enter your class');
+    return;
+  }
+  
   studentName = name;
+  studentClass = studentClassValue;
   console.log('Student name set to:', studentName);
+  console.log('Student class set to:', studentClass);
   
   elements.studentNameInput.disabled = true;
-  elements.nameForm.querySelector('button').textContent = 'Name Saved ✓';
+  elements.studentClassInput.disabled = true;
+  elements.nameForm.querySelector('button').textContent = 'Details Saved ✓';
   elements.nameForm.querySelector('button').disabled = true;
   console.log('Name form updated - button disabled and text changed');
   
@@ -593,6 +661,8 @@ function selectAvatar(selectedOption) {
   
   allAvatars.forEach(option => {
     option.classList.remove('selected');
+    // Update tabindex for keyboard navigation
+    option.setAttribute('tabindex', '-1');
   });
   
   // Add selection to clicked avatar
@@ -601,16 +671,29 @@ function selectAvatar(selectedOption) {
   selectedAvatarName = selectedOption.dataset.name;
   selectedAvatarImageUrl = selectedOption.dataset.imageUrl;
   
+  // Make selected avatar focusable
+  selectedOption.setAttribute('tabindex', '0');
+  
   console.log('Avatar selected:', selectedAvatar, selectedAvatarName);
   
-  // Enable continue button
+  // Enable continue button with enhanced styling
   if (elements.avatarContinueBtn) {
     elements.avatarContinueBtn.disabled = false;
+    elements.avatarContinueBtn.textContent = 'Continue to Assessment';
     console.log('Continue button enabled');
   }
   
-  // Add visual feedback
+  // Add visual feedback and focus management
   selectedOption.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  
+  // Announce selection for screen readers
+  if ('speechSynthesis' in window) {
+    const announcement = `${selectedAvatarName} selected as your champion`;
+    const utterance = new SpeechSynthesisUtterance(announcement);
+    utterance.volume = 0.1; // Very quiet announcement
+    utterance.rate = 1.2;
+    speechSynthesis.speak(utterance);
+  }
 }
 
 // Show Assessment Selection
@@ -1621,6 +1704,9 @@ function returnToMenu() {
   if (elements.studentNameInput) {
     elements.studentNameInput.disabled = false;
   }
+  if (elements.studentClassInput) {
+    elements.studentClassInput.disabled = false;
+  }
   
   const nameFormButton = elements.nameForm?.querySelector('button');
   if (nameFormButton) {
@@ -1649,8 +1735,12 @@ function returnToMenu() {
     selectedAvatar = '';
     selectedAvatarName = '';
     studentName = '';
+    studentClass = '';
     if (elements.studentNameInput) {
       elements.studentNameInput.value = '';
+    }
+    if (elements.studentClassInput) {
+      elements.studentClassInput.value = '';
     }
   }
   

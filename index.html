@@ -74,22 +74,34 @@
                 <div class="welcome-content">
                     <h2 class="welcome-title">Ready to show your math skills?</h2>
                     <p class="instructions adventure-instructions">
-                        What's your name?
+                        Tell us about yourself to get started!
                     </p>
                 </div>
 
                 <form id="name-form" class="adventure-form">
-                    <div class="input-container">
-                        <div class="input-icon">👤</div>
-                        <input type="text" id="student-name" placeholder="Enter your name" required>
-                        <div class="input-glow"></div>
+                    <div class="input-group">
+                        <label for="student-name" class="input-label">Name</label>
+                        <div class="input-container">
+                            <div class="input-icon">👤</div>
+                            <input type="text" id="student-name" placeholder="Enter your name" required>
+                            <div class="input-glow"></div>
+                        </div>
                     </div>
+                    
+                    <div class="input-group">
+                        <label for="student-class" class="input-label">Class</label>
+                        <div class="input-container">
+                            <div class="input-icon">🏫</div>
+                            <input type="text" id="student-class" placeholder="e.g. Year 3 Blue" required>
+                            <div class="input-glow"></div>
+                        </div>
+                    </div>
+                    
                     <button type="submit" class="btn btn-adventure">
                         <span class="btn-text">Let's Go!</span>
                         <span class="btn-icon">🚀</span>
                     </button>
                 </form>
-
 
             </section>
 
@@ -105,8 +117,8 @@
                     </div>
                 </div>
                 
-                <h2>🎯 Choose Your Assessment</h2>
-                <p class="instructions">Click on an assessment to begin. Listen carefully to each question!</p>
+                <h2>Choose Your Assessment</h2>
+                <p class="instructions">Choose an assessment to begin</p>
                 
                 <div class="assessment-grid">
                     <button class="assessment-btn" data-assessment="1">
@@ -141,13 +153,13 @@
     <!-- Avatar Selection Page -->
     <div id="avatar-selection-page" class="page">
         <header>
-            <h1>🏆 Choose Your Math Champion!</h1>
-            <p class="subtitle">Pick your inspiration</p>
+            <h1>Choose Your Math Champion!</h1>
+            <p class="subtitle">Pick your favorite</p>
         </header>
 
         <div class="container">
             <section class="avatar-selection-section">
-                <p class="instructions">Pick your favorite star to join you on this math adventure!</p>
+                <p class="instructions">Choose a champion to help you with your math test!</p>
                 
                 <div id="avatar-grid" class="avatar-grid">
                     <!-- Avatar options will be added here -->
@@ -208,13 +220,13 @@
             <div class="transition-avatar-section">
                 <div id="transition-avatar" class="student-avatar-large"></div>
                 <p class="transition-encouragement">
-                    <span id="transition-student-name"></span>, you're doing great with <span id="transition-champion-name"></span> cheering you on!
+                    <span id="transition-student-name"></span>, you're doing great!
                 </p>
             </div>
             
-            <h2>⏰ Get Ready!</h2>
+            <h2>Get Ready!</h2>
             <p class="large-text">The next questions will give you <strong>10 seconds</strong> to answer.</p>
-            <p class="instructions">Take your time and think carefully!</p>
+            <p class="instructions">Think carefully!</p>
             <button id="begin-10s-btn" class="btn btn-primary">Begin</button>
         </div>
     </div>
@@ -222,14 +234,14 @@
     <!-- Results Page -->
     <div id="results-page" class="page">
         <header>
-            <h1>🎉 Assessment Complete!</h1>
+            <h1>Assessment Complete!</h1>
         </header>
 
         <div class="container">
             <div id="results-content">
                 <!-- Results will be populated here -->
             </div>
-            <button id="return-menu-btn" class="btn btn-primary">Take Another Assessment</button>
+            <button id="return-menu-btn" class="btn btn-primary">Take Another Test</button>
         </div>
     </div>
 

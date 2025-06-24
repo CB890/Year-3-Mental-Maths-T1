@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Google Sheets Integration Test</h1>
+    
+    <div class="info">
+        <strong>Testing URL:</strong><br>
+        <code>https://script.google.com/macros/s/AKfycbzN-ZRcqwC3jmiY8Fb7uipwRzkcOInHZ1ozjMgGA2TDJwYW8CJJZpAS0maFnc4PI44q/exec</code>
+    </div>
+
+    <h2>🎯 Quick Tests</h2>
+    
+    <button class="test-button" onclick="testConnection()">
+        🔗 Test Google Sheets Connection
+    </button>
+    
+    <button class="test-button" onclick="testFullAssessment()">
+        📝 Test Full Assessment Data
+    </button>
+    
+    <button class="test-button" onclick="checkLocalStorage()">
+        💾 Check Local Storage
+    </button>
+
+    <div id="results"></div>
+
+    <h2>📋 Instructions</h2>
+    <ol>
+        <li><strong>Click "Test Google Sheets Connection"</strong> to verify basic connectivity</li>
+        <li><strong>Check your Google Sheet</strong> to see if test data appears</li>
+        <li><strong>Click "Test Full Assessment Data"</strong> to simulate a complete assessment</li>
+        <li><strong>Open browser console</strong> (F12) to see detailed logs</li>
+    </ol>
+
+    <script>
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzN-ZRcqwC3jmiY8Fb7uipwRzkcOInHZ1ozjMgGA2TDJwYW8CJJZpAS0maFnc4PI44q/exec';
+
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+            
+            // Auto-scroll to results
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function testConnection() {
+            showResult('🧪 Testing Google Sheets connection...', 'info');
+            console.log('🧪 Starting connection test...');
+
+            const testData = {
+                studentName: 'Test Student',
+                studentClass: 'Year 3 Test',
+                assessmentNumber: 1,
+                questions: [
+                    {
+                        problem: '2 + 2',
+                        studentAnswer: '4',
+                        correct: true,
+                        timeSpent: 3.5
+                    },
+                    {
+                        problem: '5 - 3',
+                        studentAnswer: '2',
+                        correct: true,
+                        timeSpent: 2.8
+                    }
+                ]
+            };
+
+            try {
+                console.log('📤 Sending test data:', testData);
+                
+                const response = await fetch(GOOGLE_SHEETS_URL, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                console.log('📡 Response status:', response.status);
+                
+                const result = await response.json();
+                console.log('📥 Response data:', result);
+
+                if (result.success) {
+                    showResult(`✅ <strong>SUCCESS!</strong> Test data saved to Google Sheets row ${result.rowNumber}<br>
+                              🔍 Check your Google Sheet to see the test entry!`, 'success');
+                } else {
+                    showResult(`❌ <strong>FAILED:</strong> ${result.error}<br>
+                              Check your Apps Script deployment and permissions.`, 'error');
+                }
+            } catch (error) {
+                console.error('❌ Connection test error:', error);
+                showResult(`❌ <strong>CONNECTION ERROR:</strong> ${error.message}<br>
+                          Check your internet connection and deployment URL.`, 'error');
+            }
+        }
+
+        async function testFullAssessment() {
+            showResult('📝 Testing full assessment data...', 'info');
+            console.log('📝 Starting full assessment test...');
+
+            const fullTestData = {
+                studentName: 'Emma Wilson',
+                studentClass: 'Year 3 Blue',
+                assessmentNumber: 2,
+                questions: [
+                    { problem: '8 × 4', studentAnswer: '32', correct: true, timeSpent: 3.2 },
+                    { problem: 'Count on 100 from 245', studentAnswer: '345', correct: true, timeSpent: 4.1 },
+                    { problem: 'What is ½ of 16?', studentAnswer: '8', correct: true, timeSpent: 5.3 },
+                    { problem: 'Add £1.20 and 50p', studentAnswer: '£1.70', correct: true, timeSpent: 6.2 },
+                    { problem: 'How many minutes in half an hour?', studentAnswer: '30', correct: true, timeSpent: 2.8 },
+                    { problem: 'What is 9 less than 302?', studentAnswer: '293', correct: true, timeSpent: 4.7 },
+                    { problem: 'Write six hundred and nine in numerals', studentAnswer: '609', correct: true, timeSpent: 3.9 },
+                    { problem: 'What is 24 ÷ 8?', studentAnswer: '3', correct: true, timeSpent: 2.5 },
+                    { problem: '365 – 78 = ?', studentAnswer: '287', correct: true, timeSpent: 8.1 },
+                    { problem: '4 × 7 × 2 = ?', studentAnswer: '56', correct: true, timeSpent: 7.3 },
+                    { problem: 'Which is larger: ¾ or ⅖?', studentAnswer: '¾', correct: true, timeSpent: 9.2 },
+                    { problem: 'The perimeter of a square is 24 cm. How long is one side?', studentAnswer: '6 cm', correct: true, timeSpent: 8.8 }
+                ]
+            };
+
+            try {
+                console.log('📤 Sending full assessment data:', fullTestData);
+                
+                const response = await fetch(GOOGLE_SHEETS_URL, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(fullTestData)
+                });
+
+                console.log('📡 Response status:', response.status);
+                
+                const result = await response.json();
+                console.log('📥 Response data:', result);
+
+                if (result.success) {
+                    showResult(`✅ <strong>FULL TEST SUCCESS!</strong> Complete assessment data saved to row ${result.rowNumber}<br>
+                              📊 This simulates a real student completing Assessment 2<br>
+                              🔍 Check your Google Sheet to see all 12 questions with timing data!`, 'success');
+                } else {
+                    showResult(`❌ <strong>FULL TEST FAILED:</strong> ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('❌ Full test error:', error);
+                showResult(`❌ <strong>FULL TEST ERROR:</strong> ${error.message}`, 'error');
+            }
+        }
+
+        function checkLocalStorage() {
+            try {
+                const localData = JSON.parse(localStorage.getItem('mentalMathResults') || '[]');
+                const unsavedData = localData.filter(item => !item.saved);
+                const savedData = localData.filter(item => item.saved);
+                
+                console.log('📊 Local storage check:', localData);
+                
+                showResult(`📱 <strong>LOCAL STORAGE STATUS:</strong><br>
+                          💾 Total assessments: ${localData.length}<br>
+                          ✅ Uploaded to Google Sheets: ${savedData.length}<br>
+                          ⏳ Waiting to upload: ${unsavedData.length}`, 'info');
+                          
+                if (unsavedData.length > 0) {
+                    const waitingList = unsavedData.map((data, index) => 
+                        `${index + 1}. ${data.studentName} (${data.studentClass}) - Assessment ${data.assessmentNumber}`
+                    ).join('<br>');
+                    
+                    showResult(`📋 <strong>Assessments waiting to upload:</strong><br>${waitingList}`, 'info');
+                }
+            } catch (error) {
+                console.error('❌ Local storage error:', error);
+                showResult(`❌ <strong>LOCAL STORAGE ERROR:</strong> ${error.message}`, 'error');
+            }
+        }
+
+        // Show initial status
+        window.addEventListener('load', function() {
+            showResult('🌐 Ready to test Google Sheets integration!', 'info');
+            console.log('🔗 Testing URL:', GOOGLE_SHEETS_URL);
+        });
+    </script>
+</body>
+</html> 

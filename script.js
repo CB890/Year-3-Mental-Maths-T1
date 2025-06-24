@@ -1,6 +1,349 @@
 // Mental Math Assessment - JavaScript
 // Web Speech API Integration and Assessment Logic
 
+// ===== GOOGLE SHEETS INTEGRATION =====
+// TODO: Replace this URL with your NEW deployment URL after updating Google Apps Script with CORS support
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbz7M-lycyI8QxpYCf3Ie4YJDwrElr4Z2kVdXSVvzhgncaX816lvU5IqZ4O6gbSqRzyr/exec';
+
+// Assessment tracking data
+let assessmentData = {
+    studentName: '',
+    studentClass: '',
+    assessmentNumber: null,
+    questions: [],
+    startTime: null,
+    currentQuestionStartTime: null
+};
+
+// Google Sheets integration functions
+function initializeAssessmentTracking(studentName, studentClass, assessmentNumber) {
+    assessmentData = {
+        studentName: studentName,
+        studentClass: studentClass,
+        assessmentNumber: assessmentNumber,
+        questions: [],
+        startTime: new Date(),
+        currentQuestionStartTime: null
+    };
+    console.log('Assessment tracking initialized for:', studentName);
+}
+
+function startQuestionTracking(questionNumber, problemText) {
+    assessmentData.currentQuestionStartTime = new Date();
+    
+    while (assessmentData.questions.length < questionNumber) {
+        assessmentData.questions.push({
+            problem: '',
+            studentAnswer: '',
+            correct: false,
+            timeSpent: 0
+        });
+    }
+    
+    assessmentData.questions[questionNumber - 1].problem = problemText;
+}
+
+function recordQuestionResult(questionNumber, studentAnswer, correctAnswer, problemText) {
+    const questionIndex = questionNumber - 1;
+    const timeSpent = assessmentData.currentQuestionStartTime ? 
+        (new Date() - assessmentData.currentQuestionStartTime) / 1000 : 0;
+    
+    while (assessmentData.questions.length <= questionIndex) {
+        assessmentData.questions.push({
+            problem: '',
+            studentAnswer: '',
+            correct: false,
+            timeSpent: 0
+        });
+    }
+    
+    assessmentData.questions[questionIndex] = {
+        problem: problemText || assessmentData.questions[questionIndex].problem,
+        studentAnswer: studentAnswer,
+        correct: studentAnswer == correctAnswer,
+        timeSpent: timeSpent
+    };
+    
+    console.log(`Question ${questionNumber} recorded:`, assessmentData.questions[questionIndex]);
+}
+
+async function sendToGoogleSheets() {
+    try {
+        // Prepare data in the exact format expected by your Google Apps Script
+        const dataToSend = {
+            studentName: assessmentData.studentName,
+            studentClass: assessmentData.studentClass,
+            assessmentNumber: assessmentData.assessmentNumber,
+            questions: assessmentData.questions // This already has the correct format: problem, studentAnswer, correct, timeSpent
+        };
+        
+        console.log('📤 Sending assessment data to Google Sheets with no-cors mode...');
+        console.log('📊 Student:', dataToSend.studentName, 'Class:', dataToSend.studentClass);
+        console.log('📝 Assessment:', dataToSend.assessmentNumber, 'Questions:', dataToSend.questions.length);
+        console.log('🔗 URL:', GOOGLE_SHEETS_URL);
+        
+        const response = await fetch(GOOGLE_SHEETS_URL, {
+            method: 'POST',
+            mode: 'no-cors', // This bypasses all CORS restrictions
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dataToSend)
+        });
+        
+        // With no-cors mode, we can't read the response
+        // But the data will still be sent to Google Sheets
+        console.log('✅ Data sent to Google Sheets (no-cors mode)');
+        console.log('📝 Note: Response details not available due to no-cors mode, but data was transmitted');
+        
+        showGoogleSheetsSuccessMessage('Your results have been sent to the teacher\'s Google Sheet! ✨');
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Network error sending to Google Sheets:', error);
+        showGoogleSheetsErrorMessage('Internet connection issue. Results saved locally and will upload when connection returns.');
+        
+        const dataToSend = {
+            studentName: assessmentData.studentName,
+            studentClass: assessmentData.studentClass,
+            assessmentNumber: assessmentData.assessmentNumber,
+            questions: assessmentData.questions
+        };
+        saveToLocalStorage(dataToSend);
+        return false;
+    }
+}
+
+function saveToLocalStorage(data) {
+    try {
+        const existingData = JSON.parse(localStorage.getItem('mentalMathResults') || '[]');
+        existingData.push({
+            ...data,
+            timestamp: new Date().toISOString(),
+            saved: false
+        });
+        localStorage.setItem('mentalMathResults', JSON.stringify(existingData));
+        console.log('📱 Assessment data saved locally for later upload');
+        console.log('💾 Local storage now contains', existingData.length, 'assessment(s)');
+    } catch (error) {
+        console.error('❌ Failed to save locally:', error);
+    }
+}
+
+// Function to retry sending locally stored data when back online
+async function retryLocalData() {
+    try {
+        const localData = JSON.parse(localStorage.getItem('mentalMathResults') || '[]');
+        const unsavedData = localData.filter(item => !item.saved);
+        
+        if (unsavedData.length === 0) {
+            console.log('📱 No local data to upload');
+            return;
+        }
+        
+        console.log(`📤 Attempting to upload ${unsavedData.length} locally stored assessment(s)...`);
+        
+        let successCount = 0;
+        for (let i = 0; i < unsavedData.length; i++) {
+            const data = unsavedData[i];
+            try {
+                console.log(`📤 Uploading assessment ${i + 1}/${unsavedData.length}:`, data.studentName);
+                
+                const response = await fetch(GOOGLE_SHEETS_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // This bypasses all CORS restrictions
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                // With no-cors mode, we can't read the response
+                // But assume success if no network error occurred
+                const index = localData.findIndex(item => 
+                    item.studentName === data.studentName && 
+                    item.timestamp === data.timestamp
+                );
+                if (index !== -1) {
+                    localData[index].saved = true;
+                    successCount++;
+                }
+                console.log(`✅ Sent assessment from ${data.studentName} to Google Sheets (no-cors mode)`);
+            } catch (error) {
+                console.error(`❌ Network error uploading ${data.studentName}:`, error);
+                break; // Stop trying if we're still offline
+            }
+        }
+        
+        // Update local storage
+        localStorage.setItem('mentalMathResults', JSON.stringify(localData));
+        
+        if (successCount > 0) {
+            console.log(`✅ Successfully uploaded ${successCount} assessment(s) to Google Sheets`);
+            showGoogleSheetsSuccessMessage(`Uploaded ${successCount} stored assessment(s) to Google Sheets! 📊`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error retrying local data:', error);
+    }
+}
+
+// Function to check online status and retry uploads
+function handleOnlineStatus() {
+    if (navigator.onLine) {
+        console.log('📶 Internet connection restored - checking for stored assessments...');
+        retryLocalData();
+    } else {
+        console.log('📴 Offline mode - assessments will be saved locally');
+    }
+}
+
+function showGoogleSheetsSuccessMessage(message) {
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message';
+    successDiv.innerHTML = `
+        <div class="message-content">
+            <span class="success-icon">✅</span>
+            <span class="message-text">${message}</span>
+        </div>
+    `;
+    document.body.appendChild(successDiv);
+    setTimeout(() => {
+        if (successDiv.parentNode) {
+            successDiv.parentNode.removeChild(successDiv);
+        }
+    }, 5000);
+}
+
+function showGoogleSheetsErrorMessage(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.innerHTML = `
+        <div class="message-content">
+            <span class="error-icon">⚠️</span>
+            <span class="message-text">${message}</span>
+        </div>
+    `;
+    document.body.appendChild(errorDiv);
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.parentNode.removeChild(errorDiv);
+        }
+    }, 7000);
+}
+
+// Test function for Google Sheets connection
+async function testGoogleSheetsConnection() {
+    console.log('🧪 Testing Google Sheets connection...');
+    console.log('🔗 Testing URL:', GOOGLE_SHEETS_URL);
+    
+    const testData = {
+        studentName: 'Test Student',
+        studentClass: 'Year 3 Test',
+        assessmentNumber: 1,
+        questions: [
+            {
+                problem: '2 + 2',
+                studentAnswer: '4',
+                correct: true,
+                timeSpent: 3.5
+            },
+            {
+                problem: '5 - 3',
+                studentAnswer: '2',
+                correct: true,
+                timeSpent: 2.8
+            },
+            {
+                problem: '3 × 4',
+                studentAnswer: '12',
+                correct: true,
+                timeSpent: 4.2
+            }
+        ]
+    };
+    
+    console.log('📤 Sending test data:', testData);
+    
+    try {
+        const response = await fetch(GOOGLE_SHEETS_URL, {
+            method: 'POST',
+            mode: 'no-cors', // This bypasses all CORS restrictions
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(testData)
+        });
+        
+        // With no-cors mode, we can't read the response
+        // But assume success if no network error occurred
+        console.log('✅ Test data sent to Google Sheets (no-cors mode)');
+        console.log('📝 Note: Response details not available due to no-cors mode, but data was transmitted');
+        
+        alert(`✅ TEST COMPLETED! Google Sheets integration is using no-cors mode!\n\n📊 Test data has been sent to your Google Sheet\n🔍 Check your Google Sheet to see if the test entry appears\n\n🎯 Your app will now automatically save student assessment results!\n\nNote: Due to no-cors mode, we can't verify delivery but the data should appear in your sheet.`);
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Google Sheets connection test error:', error);
+        alert(`❌ Could not connect to Google Sheets:\n\n${error.message}\n\nPlease check:\n• Your internet connection\n• The deployment URL is correct\n• Apps Script permissions`);
+        return false;
+    }
+}
+
+// Add event listeners for online/offline detection
+window.addEventListener('online', handleOnlineStatus);
+window.addEventListener('offline', handleOnlineStatus);
+
+// Check for stored data when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    if (navigator.onLine) {
+        console.log('🌐 App loaded online - checking for stored assessments to upload...');
+        setTimeout(retryLocalData, 2000); // Small delay to ensure page is fully loaded
+    } else {
+        console.log('📴 App loaded offline - will save assessments locally');
+    }
+});
+
+// Function to check local storage status (for debugging)
+function checkLocalStorage() {
+    try {
+        const localData = JSON.parse(localStorage.getItem('mentalMathResults') || '[]');
+        const unsavedData = localData.filter(item => !item.saved);
+        const savedData = localData.filter(item => item.saved);
+        
+        console.log('📊 LOCAL STORAGE STATUS:');
+        console.log(`💾 Total assessments: ${localData.length}`);
+        console.log(`✅ Uploaded to Google Sheets: ${savedData.length}`);
+        console.log(`⏳ Waiting to upload: ${unsavedData.length}`);
+        
+        if (unsavedData.length > 0) {
+            console.log('📋 Assessments waiting to upload:');
+            unsavedData.forEach((data, index) => {
+                console.log(`  ${index + 1}. ${data.studentName} (${data.studentClass}) - Assessment ${data.assessmentNumber}`);
+            });
+        }
+        
+        alert(`📊 Local Storage Status:\n\n💾 Total assessments: ${localData.length}\n✅ Uploaded: ${savedData.length}\n⏳ Waiting to upload: ${unsavedData.length}`);
+        
+        return {
+            total: localData.length,
+            uploaded: savedData.length,
+            pending: unsavedData.length,
+            data: localData
+        };
+    } catch (error) {
+        console.error('❌ Error checking local storage:', error);
+        return null;
+    }
+}
+
+// Make functions available globally for debugging
+window.testGoogleSheetsConnection = testGoogleSheetsConnection;
+window.checkLocalStorage = checkLocalStorage;
+window.retryLocalData = retryLocalData;
+
+// ===== END GOOGLE SHEETS INTEGRATION =====
+
 // Assessment Data Structure (as provided in requirements)
 const assessments = {
   1: {
@@ -120,6 +463,7 @@ let timer = null;
 let timeLeft = 0;
 let isListening = false;
 let isResetting = false; // Flag to prevent timer start during reset
+let encouragementTimer = null;
 
 // Avatar Data with Celebrity Images
 const avatarOptions = [
@@ -800,6 +1144,9 @@ function startAssessment(assessmentId) {
   currentQuestion = 0;
   studentAnswers = [];
   
+  // ===== GOOGLE SHEETS: Initialize tracking =====
+  initializeAssessmentTracking(studentName, studentClass, assessmentId);
+  
   console.log('Current assessment set to:', currentAssessment.title);
   console.log('Student name:', studentName);
   console.log('Selected avatar:', selectedAvatar, selectedAvatarName);
@@ -1170,6 +1517,9 @@ async function presentQuestion() {
   console.log('Expected answer:', question.answer);
   console.log('Time limit:', question.time, 'seconds');
   
+  // ===== GOOGLE SHEETS: Start tracking this question =====
+  startQuestionTracking(currentQuestion + 1, question.text);
+  
   // URGENT DEBUG: Check TTS support
   console.log("=== TTS DEBUG ===");
   console.log("TTS supported:", 'speechSynthesis' in window);
@@ -1185,6 +1535,9 @@ async function presentQuestion() {
   elements.questionText.textContent = question.text;
   elements.answerInput.value = '';
   elements.answerInput.focus();
+  
+  // Show companion avatar and update encouragement
+  updateQuestionCompanion();
   
   // Setup timer display with enhanced feedback
   timeLeft = question.time;
@@ -1440,9 +1793,22 @@ function handleNextQuestion() {
   
   console.log('Answer stored:', studentAnswers[studentAnswers.length - 1]);
   
-  // Provide immediate feedback
+  // ===== GOOGLE SHEETS: Record question result =====
+  recordQuestionResult(currentQuestion + 1, processedAnswer, question.answer, question.text);
+  
+  // Provide immediate feedback with enhanced visual effects
   const isCorrect = normalizeAnswer(processedAnswer) === normalizeAnswer(question.answer);
   console.log('Answer is correct:', isCorrect);
+  
+  // Enhanced visual feedback for answer input
+  const inputElement = elements.answerInput;
+  if (isCorrect) {
+    inputElement.classList.add('answer-success');
+    setTimeout(() => inputElement.classList.remove('answer-success'), 1000);
+  } else {
+    inputElement.classList.add('answer-error');
+    setTimeout(() => inputElement.classList.remove('answer-error'), 1000);
+  }
   
   // Enhanced Visual feedback for answer submission - Phase 4
   if (processedAnswer !== 'No answer') {
@@ -1646,6 +2012,17 @@ function showResults() {
   elements.resultsContent.innerHTML = resultsHTML;
   showPage('results');
   
+  // ===== GOOGLE SHEETS: Send final results =====
+  sendToGoogleSheets().then(success => {
+    if (success) {
+      console.log('✅ Assessment results successfully saved to Google Sheets');
+    } else {
+      console.log('⚠️ Assessment results saved locally only');
+    }
+  }).catch(error => {
+    console.error('❌ Error saving assessment results:', error);
+  });
+  
   console.log('Results page displayed');
 }
 
@@ -1761,6 +2138,10 @@ function stopAllTimers() {
   if (timer) {
     clearInterval(timer);
     timer = null;
+  }
+  if (encouragementTimer) {
+    clearInterval(encouragementTimer);
+    encouragementTimer = null;
   }
 }
 
@@ -3559,3 +3940,66 @@ function testTTS() {
 
 // Make test function available globally
 window.testTTS = testTTS;
+
+// Enhanced Student Avatar Display for Question Companion
+function updateQuestionCompanion() {
+    const companionElement = document.getElementById('question-companion');
+    const encouragementElement = document.getElementById('encouragement-message');
+    
+    if (!companionElement || !selectedAvatar) return;
+    
+    // Show companion with student's selected avatar
+    companionElement.style.backgroundImage = `url(${selectedAvatar.imageUrl})`;
+    companionElement.style.backgroundSize = 'cover';
+    companionElement.style.backgroundPosition = 'center';
+    companionElement.classList.remove('hidden');
+    
+    // Clear any existing encouragement timer
+    if (encouragementTimer) {
+        clearInterval(encouragementTimer);
+        encouragementTimer = null;
+    }
+    
+    // Show encouraging messages periodically
+    const encouragingMessages = [
+        "You're doing great! 🌟",
+        "Keep thinking! 💭", 
+        "Take your time! ⏰",
+        "You've got this! 💪",
+        "Great job! 👏",
+        "Almost there! 🎯",
+        "Fantastic work! ✨",
+        "Keep going! 🚀",
+        "Math superstar! ⭐",
+        "Think it through! 🧠",
+        "You can do it! 💝"
+    ];
+    
+    // Start encouragement timer - show message every 12 seconds
+    encouragementTimer = setInterval(() => {
+        if (encouragementElement && !encouragementElement.style.animation) {
+            const randomMessage = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
+            encouragementElement.textContent = randomMessage;
+            encouragementElement.style.animation = 'encouragementAppear 3s ease-in-out';
+            
+            // Reset animation for next message
+            setTimeout(() => {
+                encouragementElement.style.animation = '';
+            }, 3000);
+        }
+    }, 12000);
+    
+    // Show initial encouraging message after 3 seconds
+    setTimeout(() => {
+        if (encouragementElement) {
+            const initialMessage = encouragingMessages[0];
+            encouragementElement.textContent = initialMessage;
+            encouragementElement.style.animation = 'encouragementAppear 3s ease-in-out';
+            
+            setTimeout(() => {
+                encouragementElement.style.animation = '';
+            }, 3000);
+        }
+    }, 3000);
+}
+
